@@ -11,6 +11,18 @@ void t_log()
     vlog<<"===== end ====="<<endl;
 }
 
+void t_vlogf()
+{
+    vflog::instance()->init("test_vlogf.txt",vflog::e_warning,false);
+    for(int i=0;i<10;i++)
+    {
+        vloge<<"error:to txt form stdout"<<endl;
+        vlogw<<"warning:to txt form stdout"<<endl;
+        vlogd<<"debug:to txt form stdout"<<endl;
+        vlogf<<"info:to txt form stdout"<<endl;
+    }
+}
+
 void t_stm()
 {
     string a = "1-22-333-4444-55555";
@@ -27,12 +39,13 @@ void t_stm()
 }
 
 
+
 #if 1
 int main()
 {
-
-    t_log();//测试日志
     t_stm();//字符切割
+    t_log();//测试日志
+    t_vlogf();//测试文件日志
 
     return 0;
 }
