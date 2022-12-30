@@ -5,22 +5,18 @@
 
 using namespace std;
 
-void t_log()
-{
-    vlog<<"hellow world"<<endl;
-    vlog<<"===== end ====="<<endl;
-}
-
 void t_vlogf()
 {
-    vflog::instance()->init("test_vlogf.txt",vflog::e_warning,false);
-    for(int i=0;i<10;i++)
-    {
-        vloge<<"error:to txt form stdout"<<endl;
-        vlogw<<"warning:to txt form stdout"<<endl;
-        vlogd<<"debug:to txt form stdout"<<endl;
-        vlogf<<"info:to txt form stdout"<<endl;
-    }
+//    vflog::instance()->init("test_vlogf.txt",vflog::e_info,false);
+    vflog::instance()->init(vflog::e_info);
+    for(int i=0;i<3;i++)
+    { vloge<<"error:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogw<<"warning:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogd<<"debug:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogf<<"info:to txt form stdout"<<endl; }
 }
 
 void t_stm()
@@ -44,7 +40,6 @@ void t_stm()
 int main()
 {
     t_stm();//字符切割
-    t_log();//测试日志
     t_vlogf();//测试文件日志
 
     return 0;
