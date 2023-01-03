@@ -60,6 +60,8 @@ using std::endl;
 //      [bool is_new:追加或者从零开始写入到文件]
 //
 #define cl "\033[0m"<<end
+#define okc ok_c && op_c && oc_c
+#define okf ok_f && op_f && oc_f
 class vflog
 {
 protected:
@@ -67,49 +69,54 @@ protected:
     { "\033[31m[Error","\033[33m[Warning","\033[32m[Debug","[Info" };
 public:
     enum level{ e_error,e_warning,e_debug,e_info };
-    static vflog* instance() { if(obj == nullptr) obj = new vflog; return obj; };
+    static vflog* instance() { if(obj==nullptr){obj=new vflog;} return obj; };
+    void set_level(level elf,level elc) { el_f=elf; el_c=elc; }
+    void close_log(bool of,bool oc) { oc_f=of; oc_c=oc; }
+
     bool init(std::string filename,level el = e_info,bool is_app = true)
     {
-        if(is_open) return false;
-        is_open = true; v_el = el;
-        if(is_app) ofs.open(filename,std::ios::out);
-        else ofs.open(filename,std::ios::out | std::ios::app);
-        if(ofs.is_open()) return true;
-        return false;
+        if(v_filename!=filename){ if(op_f){ op_f=false; ofs.close(); } }
+        else { if(op_f) return op_f; } el_f = el;
+        if(is_app) ofs.open(filename,std::ios::out | std::ios::app);
+        else ofs.open(filename,std::ios::out );
+        op_f = ofs.is_open(); return op_f;
     }
     bool init(level el = e_info)
     {
-        if(is_open) return false;
-        is_open = true; is_cout = true; v_el = el;
-        return true;
+        if(op_c) { return op_c; }
+        el_c = el; op_c = true; return op_c;
     }
 
     template<class T>
     vflog& operator<<(const T &txt)
-    { if(is_write) {if(is_cout) std::cout<<txt; else ofs<<txt;}return *this; };
+    { if(okf) ofs<<txt; if(okc) std::cout<<txt; return *this; };
     vflog& operator<<(std::ostream& (*end)(std::ostream&))
-    { if(is_write) {if(is_cout) std::cout<<cl; else ofs<<cl;}return *this; };
+    { if(okf) ofs<<cl; if(okc) std::cout<<cl; return *this; };
     vflog& operator<<(level el)
     {
-        if(el <= v_el) is_write = true; else is_write = false;
-        if(is_write)
-        {
-            if(is_cout) { std::cout<<vec[el]<<"] "; }
-            else { ofs<<vec[el]<<"] ["<<get_time()<<"] "; }
-        }
+        if(el <= el_f) ok_f = true; else ok_f = false;
+        if(el <= el_c) ok_c = true; else ok_c = false;
+        if(okf){ ofs<<vec[el]<<"] ["<<get_time()<<"] "; }
+        if(okc){ std::cout<<vec[el]<<"] "; }
         return *this;
     };
 
 private:
     vflog(){}
-    ~vflog(){ if(is_cout == false) ofs.close(); };
+    ~vflog(){ if(ofs.is_open()) ofs.close(); };
 
     static vflog* obj;
     std::fstream ofs;
-    bool is_write = false;
-    bool is_open = false;
-    bool is_cout = false;
-    level v_el;
+    std::string v_filename;
+
+    bool oc_f = true;
+    bool oc_c = true;
+    bool op_f = false;
+    bool op_c = false;
+    bool ok_f = false;
+    bool ok_c = false;
+    level el_f;
+    level el_c;
 
     std::string get_time()
     {
@@ -120,8 +127,6 @@ private:
     class mcv { ~mcv(){delete obj; obj = nullptr;} }; static mcv t;
 };
 vflog* vflog::obj = nullptr;
-
-#define vlog_init(filename) vflog::instance()->init(filename)
 
 //打印到文件
 #define vloge \

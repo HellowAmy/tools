@@ -1,5 +1,5 @@
 #include <iostream>
-
+#define __NO_SHOW_VLOG__
 #include <lib/vlog.hpp>
 #include <lib/str_c.hpp>
 
@@ -7,8 +7,9 @@ using namespace std;
 
 void t_vlogf()
 {
-//    vflog::instance()->init("test_vlogf.txt",vflog::e_info,false);
+    vflog::instance()->init("test_vlogf.txt",vflog::e_info,false);
     vflog::instance()->init(vflog::e_info);
+
     for(int i=0;i<3;i++)
     { vloge<<"error:to txt form stdout"<<endl; }
     for(int i=0;i<3;i++)
@@ -17,6 +18,55 @@ void t_vlogf()
     { vlogd<<"debug:to txt form stdout"<<endl; }
     for(int i=0;i<3;i++)
     { vlogf<<"info:to txt form stdout"<<endl; }
+
+    vlogf<<"==============="<<endl;
+    vflog::instance()->init("tt2.txt",vflog::e_info,true);
+    vflog::instance()->set_level(vflog::e_warning,vflog::e_warning);
+
+    for(int i=0;i<3;i++)
+    { vloge<<"error:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogw<<"warning:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogd<<"debug:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogf<<"info:to txt form stdout"<<endl; }
+
+    vflog::instance()->init("test_vlogf.txt",vflog::e_info,true);
+    vloge<<"==============="<<endl;
+    vflog::instance()->set_level(vflog::e_info,vflog::e_info);
+
+    for(int i=0;i<3;i++)
+    { vloge<<"error:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogw<<"warning:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogd<<"debug:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogf<<"info:to txt form stdout"<<endl; }
+
+    vloge<<"========close_log:false======="<<endl;
+    vflog::instance()->close_log(false,false);
+    for(int i=0;i<3;i++)
+    { vloge<<"error:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogw<<"warning:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogd<<"debug:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogf<<"info:to txt form stdout"<<endl; }
+
+    vflog::instance()->close_log(true,true);
+    vloge<<"========close_log:true======="<<endl;
+    for(int i=0;i<3;i++)
+    { vloge<<"error:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogw<<"warning:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogd<<"debug:to txt form stdout"<<endl; }
+    for(int i=0;i<3;i++)
+    { vlogf<<"info:to txt form stdout"<<endl; }
+
 }
 
 void t_stm()
