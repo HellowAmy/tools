@@ -3,8 +3,6 @@
 #include <lib/vlog.hpp>
 #include <lib/str_c.hpp>
 
-using namespace std;
-
 void t_vlogf()
 {
     vflog::instance()->init("test_vlogf.txt",vflog::e_info,false);
@@ -71,6 +69,7 @@ void t_vlogf()
 
 void t_stm()
 {
+    using namespace std;
     string a = "1-22-333-4444-55555";
     cout<<"ret = "<<tools::stm(a)("-",0,2)<<endl;
     //[ret = 1-22-333]
@@ -84,13 +83,60 @@ void t_stm()
     //[ret = 19911-12-3]
 }
 
+#include <vector>
+#include <list>
+void t_for()
+{
+    using namespace std;
+    vector<string> vec;
+    vec.push_back("012");
+    vec.push_back("123");
+    vec.push_back("234");
+    vec.push_back("345");
+
+    list<int> list;
+    list.push_back(123);
+    list.push_back(1234);
+    list.push_back(12345);
+    list.push_back(123456);
+
+    cout<<"==========="<<endl;
+    for_show(it,vec);
+    cout<<"==========="<<endl;
+    for_it(it,list) { cout<<*it<<endl; }
+    cout<<"==========="<<endl;
+}
+
+void t_push()
+{
+    using namespace std;
+    new_arr(vec,vector,int,1,12);
+    new_arr(lis,list,string,"aaa","bbb","ccc");
+
+    cout<<"1:====="<<endl;
+    for_show_p(it,vec);
+
+    cout<<"2:====="<<endl;
+    for_show_p(it,lis);
+
+    push_arr(vec,10,20,30);
+    push_arr(lis,"hellow","are you ok","no no no!!!");
+
+    cout<<"3:====="<<endl;
+    for_show_p(it,vec);
+
+    cout<<"4:====="<<endl;
+    for_show_p(it,lis);
+}
 
 
 #if 1
 int main()
 {
-    t_stm();//字符切割
-    t_vlogf();//测试文件日志
+//    t_stm();//字符切割
+//    t_vlogf();//测试文件日志
+//    t_for();//循环宏
+    t_push();//重载push类
 
     return 0;
 }

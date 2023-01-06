@@ -49,6 +49,10 @@ void show_arr(const T vec,QString flg = "|")
 #include <string>
 #include <vector>
 #include <fstream>
+#include <memory>
+#include <queue>
+//#include
+#include <deque>
 using std::endl;
 
 
@@ -145,6 +149,50 @@ vflog* vflog::obj = nullptr;
     *vflog::instance()<<vflog::e_info\
     <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< "
 //===== vflog =====
+
+
+//===== define: for =====
+//功能:直接打印(包括换行)或者提供快捷的for版本
+//      提供对象版本和指针版本
+#define for_show(it,arr) \
+    for(auto it=arr.begin();it!=arr.end();it++) \
+    { std::cout<<*it<<std::endl; }
+#define for_show_p(it,arr) \
+    for(auto it=arr->begin();it!=arr->end();it++) \
+    { std::cout<<*it<<std::endl; }
+
+#define for_it(it,arr) \
+    for(auto it=arr.begin();it!=arr.end();it++)
+#define for_it_p(it,arr) \
+    for(auto it=arr->begin();it!=arr->end();it++)
+//===== define: for =====
+
+
+//===== define: push arr =====
+//功能:op_dot类对","操作运算符进行重载，使得op_dot可以向标准库容器push内容
+//      提供两个宏对容器进行操作:
+//      new_arr:[容器对象][容器类型][数据类型][push的内容]
+//      push_arr:[容器对象][push的内容]
+template <template<class,class> class Tcont,class Ttype,
+          class Talloc = std::allocator<Ttype>>
+class op_dot
+{
+public:
+    op_dot(){ sp_arr = std::make_shared<Tcont<Ttype,Talloc>>();}
+    op_dot& operator,(Ttype type)
+    { sp_arr->push_back(type); return *this; }
+    std::shared_ptr<Tcont<Ttype,Talloc>> get_arr(){ return sp_arr;}
+private:
+    std::shared_ptr<Tcont<Ttype,Talloc>> sp_arr;
+};
+
+#define new_arr(arr,arr_type,type,...) \
+    op_dot<arr_type,type> obj##arr; auto arr = obj##arr.get_arr(); obj##arr,__VA_ARGS__
+
+#define push_arr(arr,...) \
+    obj##arr; obj##arr,__VA_ARGS__
+//===== define: push arr =====
+
 
 //模板打印--数组
 template<class T>
