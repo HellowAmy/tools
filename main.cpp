@@ -110,23 +110,28 @@ void t_for()
 void t_push()
 {
     using namespace std;
-    new_arr(vec,vector,int,1,12);
-    new_arr(lis,list,string,"aaa","bbb","ccc");
-
     cout<<"1:====="<<endl;
+    new_arr(vec,vector,int,1,12);
     for_show_p(it,vec);
 
     cout<<"2:====="<<endl;
+    new_arr(lis,list,string,"aaa","bbb","ccc");
     for_show_p(it,lis);
 
     push_arr(vec,10,20,30);
-    push_arr(lis,"hellow","are you ok","no no no!!!");
-
     cout<<"3:====="<<endl;
     for_show_p(it,vec);
 
+    push_arr(lis,"hellow","are you ok","no no no!!!");
     cout<<"4:====="<<endl;
     for_show_p(it,lis);
+
+    cout<<"5:====="<<endl;
+    op_dot<vector,double> op;
+    op,3.14,33.11,3344;
+    std::shared_ptr<vector<double>> sp_vec = op.get_arr();
+    for(auto it=sp_vec->begin();it!=sp_vec->end();it++)
+    { cout<<*it<<endl; }
 }
 
 

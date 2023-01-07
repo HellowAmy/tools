@@ -77,7 +77,7 @@ public:
     void set_level(level elf,level elc) { el_f=elf; el_c=elc; }
     void close_log(bool of,bool oc) { oc_f=of; oc_c=oc; }
 
-    bool init(std::string filename,level el = e_info,bool is_app = true)
+    bool init(const std::string &filename,level el = e_info,bool is_app = true)
     {
         if(v_filename!=filename){ if(op_f){ op_f=false; ofs.close(); } }
         else { if(op_f) return op_f; } el_f = el;
@@ -179,7 +179,7 @@ class op_dot
 {
 public:
     op_dot(){ sp_arr = std::make_shared<Tcont<Ttype,Talloc>>();}
-    op_dot& operator,(Ttype type)
+    op_dot& operator,(const Ttype &type)
     { sp_arr->push_back(type); return *this; }
     std::shared_ptr<Tcont<Ttype,Talloc>> get_arr(){ return sp_arr;}
 private:
