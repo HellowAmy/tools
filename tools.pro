@@ -4,8 +4,12 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += \
-        main.cpp
+        a.cpp \
+        b.cpp \
+        main.cpp \
+        vts/vts.cpp
 
 HEADERS += \
-    lib/str_c.hpp \
-    lib/vlog.hpp
+    a.h \
+    b.h \
+    vts/vts.h
