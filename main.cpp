@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <vts/vts.h>
+
 #include "a.h"
 #include "b.h"
 
@@ -10,71 +11,70 @@ void t_vlogf()
 {
     using namespace vts;
 
+
     vinit_f("test_vlogf.txt",false,vlog::e_info);
     vinit_c(vlog::e_info);
 
+    int value =100;
+    string str = "i am red";
     for(int i=0;i<3;i++)
-    { vvloge(<<"error:to txt form stdout"<<123124<<"popo"<<3.14); }
+    { vloge("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
+    for(int i=0;i<3;i++)
+    { vlogw("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
+    for(int i=0;i<3;i++)
+    { vlogd("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
+    for(int i=0;i<3;i++)
+    { vlogf("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
 
-//    *vlog::instance()<<vlog::e_error<<"----wodppasd0===="<<endl;
-    *vlog::instance()*14%"412"%51%14<<"141"<<123<<14%1**"412"<<"41"<<"";//"141";
-
-    for(int i=0;i<3;i++)
-    { vloge<<"error:to txt form stdout"<<endl; }
-    for(int i=0;i<3;i++)
-    { vlogw<<"warning:to txt form stdout"<<endl; }
-    for(int i=0;i<3;i++)
-    { vlogd<<"debug:to txt form stdout"<<endl; }
-    for(int i=0;i<3;i++)
-    { vlogf<<"info:to txt form stdout"<<endl; }
-
-    vlogf<<"==============="<<endl;
+    vloge("=====================================");
     vinit_f("tt2.txt",true,vlog::e_info);
     vlevel(vlog::e_warning,vlog::e_warning);
 
     for(int i=0;i<3;i++)
-    { vloge<<"error:to txt form stdout"<<endl; }
+    { vloge("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogw<<"warning:to txt form stdout"<<endl; }
+    { vlogw("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogd<<"debug:to txt form stdout"<<endl; }
+    { vlogd("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogf<<"info:to txt form stdout"<<endl; }
+    { vlogf("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
 
-    vinit_f("test_vlogf.txt",false,vlog::e_info);
-    vloge<<"==============="<<endl;
+    vinit_f("test_vlogf.txt",true,vlog::e_info);
+    vloge("=====================================");
     vlevel(vlog::e_info,vlog::e_info);
 
     for(int i=0;i<3;i++)
-    { vloge<<"error:to txt form stdout"<<endl; }
+    { vloge("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogw<<"warning:to txt form stdout"<<endl; }
+    { vlogw("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogd<<"debug:to txt form stdout"<<endl; }
+    { vlogd("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogf<<"info:to txt form stdout"<<endl; }
+    { vlogf("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
 
-    vloge<<"========close_log:false======="<<endl;
+    vloge("=====================================");
     vstatus(false,false);
+
     for(int i=0;i<3;i++)
-    { vloge<<"error:to txt form stdout"<<endl; }
+    { vloge("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogw<<"warning:to txt form stdout"<<endl; }
+    { vlogw("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogd<<"debug:to txt form stdout"<<endl; }
+    { vlogd("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogf<<"info:to txt form stdout"<<endl; }
+    { vlogf("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
 
     vstatus(true,true);
-    vloge<<"========close_log:true======="<<endl;
+    vloge("=====================================");
+
     for(int i=0;i<3;i++)
-    { vloge<<"error:to txt form stdout"<<endl; }
+    { vloge("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogw<<"warning:to txt form stdout"<<endl; }
+    { vlogw("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogd<<"debug:to txt form stdout"<<endl; }
+    { vlogd("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
     for(int i=0;i<3;i++)
-    { vlogf<<"info:to txt form stdout"<<endl; }
+    { vlogf("to txt: "<<v(value) v(str) l 3.14 l 1234 l "asd"); }
 
 }
 #endif
@@ -167,9 +167,9 @@ int main()
     B bb;
 
     t_vlogf();
-//    t_stm();
-//    t_for();
-//    t_push();
+    t_stm();
+    t_for();
+    t_push();
 
     cout << "Hello World!" << endl;
     return 0;

@@ -7,6 +7,7 @@
 #define VOPEN_STM
 #define VOPEN_FOR
 #define VOPEN_PUSH
+//#define VLOG_CLOSE //开启此宏将取消所有注释--头文件之前定义
 //=====
 
 //===== vflog =====
@@ -56,12 +57,7 @@ public:
 
     template<class T>
     vlog& operator<<(const T &txt)
-//    { if(okf) ofs<<txt; if(okc) std::cout<<txt; return *this; };
-    { return *this; }
-    template<class T>
-    vlog& operator%(const T &txt)
-//    { if(okf) ofs<<txt; if(okc) std::cout<<txt; return *this; };
-    { return *this; }
+    { if(okf) ofs<<txt; if(okc) std::cout<<txt; return *this; };
     vlog& operator<<(std::ostream& (*end)(std::ostream&))
     { if(okf) ofs<<cl; if(okc) std::cout<<cl; return *this; };
     vlog& operator<<(level el)
@@ -72,15 +68,6 @@ public:
         if(okc){ std::cout<<vec[el]<<"] "; }
         return *this;
     };
-    template<class T>
-    vlog& operator,(const T &txt)
-    { if(okf) ofs<<"|"<<txt; if(okc) std::cout<<"|"<<txt; return *this; }
-    template<class T>
-    vlog& operator*(const T &txt)
-//    { if(okf) ofs<<"|"<<txt; if(okc) std::cout<<"|"<<txt; return *this; }
-    { return *this; }
-    vlog& operator,(std::ostream& (*end)(std::ostream&))
-    { return *this; }
 
 private:
     explicit vlog();
@@ -95,10 +82,10 @@ private:
     level el_f;
     level el_c;
 
-    std::fstream ofs;
-    std::string v_filename;
-    std::vector<std::string> vec;
     static vlog* obj;
+    std::fstream ofs;
+    std::vector<std::string> vec;
+    std::string v_filename;
 
     std::string get_time()
     {
@@ -110,31 +97,38 @@ private:
 };
 
 //打印到文件
+
 #ifdef VLOG_CLOSE
+
+#define vloge(...)
+#define vlogw(...)
+#define vlogd(...)
+#define vlogf(...)
 
 #else
 
-#define vvloge(...) \
+#define vloge(...) \
     *vlog::instance()<<vlog::e_error\
-    <<"["<<__FILE__<<":<"<<__LINE__<<">] " __VA_ARGS__ <<endl  \
+    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< "<<__VA_ARGS__<<endl \
 
-#define vloge \
-    *vlog::instance()<<vlog::e_error\
-    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< " \
-
-#define vlogw \
+#define vlogw(...) \
     *vlog::instance()<<vlog::e_warning\
-    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< " \
+    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< "<<__VA_ARGS__<<endl \
 
-#define vlogd \
+#define vlogd(...) \
     *vlog::instance()<<vlog::e_debug\
-    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< " \
+    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< "<<__VA_ARGS__<<endl \
 
-#define vlogf \
+#define vlogf(...) \
     *vlog::instance()<<vlog::e_info\
-    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< " \
+    <<"["<<__FILE__<<":<"<<__LINE__<<">] <<<< "<<__VA_ARGS__<<endl \
 
 #endif
+
+//==快速宏
+#define v(value) "["#value": "<<value<<"] " \
+
+#define l <<"|"<< \
 
 #define vinit_f(filename,status,level) \
     vlog::instance()->init(filename,status,level) \
@@ -147,7 +141,7 @@ private:
 
 #define vlevel(of,oc) \
     vlog::instance()->set_level(of,oc) \
-
+//==快速宏
 
 //===== vts =====
 }
