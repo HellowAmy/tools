@@ -22,12 +22,21 @@ using std::endl;
 namespace vts
 {
 //===== vts =====
-
 #define cl "\033[0m"<<end
 #define okc ok_c && op_c && oc_c
 #define okf ok_f && op_f && oc_f
 
-//说明:简单打印日志系统,输出到文件中
+//说明:简单日志系统,可将日志同时输入到文件或控制台终端上
+//      注意: 1、初始化之后可用,输入文件和输入终端需要分别初始化
+//              终端: vinit_c 文件: vinit_f
+//           2、文件输入可重定向到新文件,支持不同代码段分别输入不同文件内
+//           3、支持日志四级等级: e_error,e_warning,e_debug,e_info
+//           4、支持代码分段关闭功能,vstatus(false,true)可控制开启或者关闭输入
+//           5、支持快速打印: 将变量与变量名追加到日志中
+//                  string str = "are you ok";
+//                  int value = 100;
+//                  vloge("hellow world" vv(str) vv(value));
+//
 //init()参数说明:
 //      [string filename:输出到的文件名路径]
 //      [level el:输出等级,等级不足将无法输出]
@@ -126,9 +135,9 @@ private:
 #endif
 
 //==快速宏
-#define v(value) "["#value": "<<value<<"] " \
+#define vv(value) "["#value": "<<value<<"] " \
 
-#define l <<"|"<< \
+#define vl <<"|"<< \
 
 #define vinit_f(filename,status,level) \
     vlog::instance()->init(filename,status,level) \
@@ -299,6 +308,7 @@ namespace vts
 #ifdef VOPEN_PUSH
 
 #include <memory>
+#include <functional>
 
 namespace vts
 {
@@ -314,12 +324,15 @@ template <template<class,class> class Tcont,class Ttype,
 class op_dot
 {
 public:
-    op_dot(){ sp_arr = std::make_shared<Tcont<Ttype,Talloc>>();}
+    op_dot(std::function<void(Ttype)> func)
+    { sp_arr=std::make_shared<Tcont<Ttype,Talloc>>(); func_push=func; }
     op_dot& operator,(const Ttype &type)
-    { sp_arr->push_back(type); return *this; }
+//    { sp_arr->push_back(type); return *this; }
+    { func_push(type); return *this; }
     std::shared_ptr<Tcont<Ttype,Talloc>> get_arr(){ return sp_arr;}
 private:
     std::shared_ptr<Tcont<Ttype,Talloc>> sp_arr;
+    std::function<void(Ttype)> func_push;
 };
 
 #define new_arr(arr,arr_type,type,...) \
