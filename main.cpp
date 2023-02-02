@@ -100,8 +100,10 @@ void t_stm()
 
 #if 1
 #include <vector>
+#include <fstream>
 void t_stmv()
 {
+#if 0
     using namespace std;
     string a = "11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
     string b = "--11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
@@ -131,6 +133,24 @@ void t_stmv()
 
     cout<<"========"<<endl;
     cout<<vec.size()<<"|"<<vec1.size()<<"|"<<vec2.size()<<"|"<<vec3.size()<<endl;
+#endif
+
+#if 1
+    fstream ofs("/home/red/test/inventory.vmls");
+    if(ofs.is_open())
+    {
+        string str;
+        while (getline(ofs,str))
+        {
+            cout<<"==============="<<endl;
+            cout<<str<<endl;
+            vector<string> vec = vts::stmv(str)("."," = ","\"");
+            for_show(vec);
+        }
+        ofs.close();
+    }
+#endif
+
 }
 #endif
 
@@ -169,7 +189,7 @@ class AAP
 {
 public:
 
-    void pos(T&& po){};
+    void pos(T&& ){};
 };
 
 #if 1

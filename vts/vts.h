@@ -279,6 +279,22 @@ namespace vts
 {
 //===== vts =====
 
+//功能:字符串切割,按分隔符将字符串切割到数组
+//算法:利用vector<bool>生成与字符串一样长的标记位
+//      切割算法扫描到切割符时将vector<bool>对应标记位置1(切割符占领位)
+//      然后将连续0段加入结果数组
+//用法示例:
+//      [1]
+//      string a = "11--22--33";
+//      string b = "11--22++33";
+//      string c = "11 22 33 44++55--66";
+//      vector<string> vec = vts::stmv(a)("--");
+//      [ret = 11,22,33]
+//      vector<string> vec1 = vts::stmv(b)("--");
+//      [ret = 11,22++33]
+//      vector<string> vec2 = vts::stmv(c)(" ","++","--");
+//      [ret = 11,22,33,44,55,66]
+//
 struct stmv
 {
     string v_str;
