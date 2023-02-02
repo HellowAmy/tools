@@ -11,7 +11,6 @@ void t_vlogf()
 {
     using namespace vts;
 
-
     vinit_f("test_vlogf.txt",false,vlog::e_info);
     vinit_c(vlog::e_info);
 
@@ -101,6 +100,42 @@ void t_stm()
 
 #if 1
 #include <vector>
+void t_stmv()
+{
+    using namespace std;
+    string a = "11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
+    string b = "--11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
+    string c = "11--22--33ashgdas pas<<1991-12-3>>da asdg ausd--";
+    string d = "--11--22--33ashgdas pas<<1991-12-3>>da asdg ausd ";
+    string e = "ajkwjfajknfjabcwjiabfjawabcabwfiagalkfabc";
+    vector<string> vec = vts::stmv(a)("--");
+    vector<string> vec1 = vts::stmv(b)("--"," ");
+    vector<string> vec2 = vts::stmv(c)("--"," ","<<");
+    vector<string> vec3 = vts::stmv(d)("--"," ","<<",">>");
+    vector<string> vec4 = vts::stmv(e)("abc","ab");
+
+    cout<<"========"<<endl;
+    for_show(vec);
+
+    cout<<"========"<<endl;
+    for_show(vec1);
+
+    cout<<"========"<<endl;
+    for_show(vec2);
+
+    cout<<"========"<<endl;
+    for_show(vec3);
+
+    cout<<"========"<<endl;
+    for_show(vec4);
+
+    cout<<"========"<<endl;
+    cout<<vec.size()<<"|"<<vec1.size()<<"|"<<vec2.size()<<"|"<<vec3.size()<<endl;
+}
+#endif
+
+#if 1
+#include <vector>
 #include <list>
 void t_for()
 {
@@ -177,14 +212,14 @@ void t_push()
 
     // T 是模板声明
     //类成员声明： void pos(T&& po){};
-    AAP<string> po;
-    auto tre = &AAP<string>::pos;
+//    AAP<string> po;
+//    auto tre = &AAP<string>::pos;
 
     // value_type 是模板声明
     //类成员声明： void push_back(value_type&& __x)
-    vector<string> vec;
-    vec.push_back("1241");
-    auto vec_func = &std::vector<string>::push_back;
+//    vector<string> vec;
+//    vec.push_back("1241");
+//    auto vec_func = &std::vector<string>::push_back;
 
 //    list<string> li;
 //    li.push_back("14212");
@@ -225,8 +260,9 @@ int main()
 
 //    t_vlogf();
 //    t_stm();
+    t_stmv();
 //    t_for();
-    t_push();
+//    t_push();
 
     cout << "Hello World!" << endl;
     return 0;

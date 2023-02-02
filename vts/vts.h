@@ -5,6 +5,7 @@
 //=====
 #define VOPEN_VLOG
 #define VOPEN_STM
+#define VOPEN_STMV
 #define VOPEN_FOR
 #define VOPEN_PUSH
 //#define VLOG_CLOSE //开启此宏将取消所有注释--头文件之前定义
@@ -255,6 +256,87 @@ struct stm
         pos_end -= flg.size();
         if(pos_begin >= pos_end) return "";
         return string(str.begin()+pos_begin,str.begin()+pos_end);
+    }
+};
+
+
+//===== vts =====
+}
+#endif //VOPEN_STM
+//===== stm =====
+
+
+//===== stmv =====
+#ifdef VOPEN_STMV
+
+#include <string>
+#include <vector>
+#include <bitset>
+using std::string;
+using std::vector;
+
+namespace vts
+{
+//===== vts =====
+
+struct stmv
+{
+    string v_str;
+    vector<string> vec_flg;
+    vector<bool> vec_bit;
+
+    stmv(const string &str) : v_str(str) { vec_bit.resize(str.size(),false); }
+
+    template<class ...Tarr>
+    vector<string> operator()(Tarr ...arg) { return push_flg(arg...); }
+
+    //获取切割符
+    template<class ...Tarr> vector<string> push_flg()
+    { return split_value(v_str,vec_flg); }
+    template<class ...Tarr>
+    vector<string> push_flg(const string &flg,Tarr ...arg)
+    { vec_flg.push_back(flg); return push_flg(arg...); };
+
+    //根据标记切割字符串
+    vector<string> split_value(const string &in_str,const vector<string> &in_flg)
+    {
+        vector<string> vec;
+
+        //标记数循环
+        for(size_t iflg=0;iflg<in_flg.size();iflg++)
+        {
+            //字符串标记排查,存在用bit标记
+            size_t pos_begin = 0;
+            while(true)
+            {
+                pos_begin = in_str.find(in_flg[iflg],pos_begin);
+                if(pos_begin != in_str.npos)
+                {
+                    for(size_t il=0;il<in_flg[iflg].size();il++)
+                    { vec_bit[pos_begin+il]=1; }
+                    pos_begin+=1;
+                }
+                else break;
+            }
+        }
+
+        //根据0/1状态获取字符串,加入返回结果
+        string str;
+        for(size_t i=0;i<vec_bit.size();i++)
+        {
+            if(vec_bit[i] == false)
+            {
+                if(i>0 && (vec_bit[i-1] == true)) str.clear();
+                str+=in_str[i];
+            }
+            else if(i>0 && (vec_bit[i-1] == false)) vec.push_back(str);
+        }
+
+        //末尾无状态转跳时加入结果
+        if(vec_bit[vec_bit.size()-1] == false)
+        { vec.push_back(str); }
+
+        return vec;
     }
 };
 
