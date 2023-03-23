@@ -103,7 +103,7 @@ void t_stm()
 #include <fstream>
 void t_stmv()
 {
-#if 0
+#if 1
     using namespace std;
     string a = "11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
     string b = "--11--22--33ashgdas pas<<1991-12-3>>da asdg ausd";
@@ -133,22 +133,6 @@ void t_stmv()
 
     cout<<"========"<<endl;
     cout<<vec.size()<<"|"<<vec1.size()<<"|"<<vec2.size()<<"|"<<vec3.size()<<endl;
-#endif
-
-#if 1
-    fstream ofs("/home/red/test/inventory.vmls");
-    if(ofs.is_open())
-    {
-        string str;
-        while (getline(ofs,str))
-        {
-            cout<<"==============="<<endl;
-            cout<<str<<endl;
-            vector<string> vec = vts::stmv(str)("."," = ","\"");
-            for_show(vec);
-        }
-        ofs.close();
-    }
 #endif
 
 }
@@ -184,105 +168,98 @@ void t_for()
 }
 #endif
 
-template<class T,typename _Alloc = std::allocator<T>>
-class AAP
-{
-public:
-
-    void pos(T&& ){};
-};
 
 #if 1
-#include <vector>
-#include <list>
-void t_push()
+
+void func()
 {
-    using namespace std;
-    using namespace std::placeholders;
-    using namespace vts;
-
-//    cout<<"1:====="<<endl;
-//    new_arr(vec,vector,int,1,12);
-//    for_show_p(vec);
-
-//    cout<<"2:====="<<endl;
-//    new_arr(lis,list,string,"aaa","bbb","ccc");
-//    for_show_p(lis);
-
-//    push_arr(vec,10,20,30);
-//    cout<<"3:====="<<endl;
-//    for_show_p(vec);
-
-//    push_arr(lis,"hellow","are you ok","no no no!!!");
-//    cout<<"4:====="<<endl;
-//    for_show_p(lis);
-
-//    cout<<"5:====="<<endl;
-//    op_dot<vector,double> op;
-//    op,3.14,33.11,3344;
-//    std::shared_ptr<vector<double>> sp_vec = op.get_arr();
-//    for(auto it=sp_vec->begin();it!=sp_vec->end();it++)
-//    { cout<<*it<<endl; }
-
-
-
-//    vec4.push_back("124");
-    //const value_type& __x
-
-
-    // T 是模板声明
-    //类成员声明： void pos(T&& po){};
-//    AAP<string> po;
-//    auto tre = &AAP<string>::pos;
-
-    // value_type 是模板声明
-    //类成员声明： void push_back(value_type&& __x)
-//    vector<string> vec;
-//    vec.push_back("1241");
-//    auto vec_func = &std::vector<string>::push_back;
-
-//    list<string> li;
-//    li.push_back("14212");
-//    auto vec_funcll = &std::list<string>::push_back;
-
-
-//    po.pos("124124");
-//    cout<<typeid(tre)<<endl;
-//    auto func = bind(&AAP<string>::pos,po,_1);
-//    bind(&vector<string>::push_back,vec4,_1);
-
-//    template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
-
-
-//    auto func2 =
-//            bind(&vector<int>::push_back,vec4,412);
-
-//    op_dot<vector,double> op(bind(&vector<string>::push_back,vec,"412");
+    for(size_t i=0;i<400000000;i++) {}
 }
+
+void t_timel()
+{
+    {
+        vts::ctimel tm;
+        func();
+        tm.show();
+
+        func();
+        tm.show();
+
+        tm.update();
+        func();
+    }
+
+    {
+        //!
+        //! 日志的性能测试
+        //!
+        //! vloge得分：
+        //! [nan: 816759775|mic: 816759|mil: 816|sec: 0]
+        //!
+        //! cout得分：
+        //! [nan: 96010909|mic: 96010|mil: 96|sec: 0]
+        //!
+        //! printf得分：与cout不相上下
+        //! [nan: 107381042|mic: 107381|mil: 107|sec: 0]
+        //!
+        //! 总结：这个多功能日志非常消耗性能
+        //!
+        using namespace vts;
+        ctimel tm;
+
+        int value =100;
+        string str = "i am red";
+#if 1
+        for(int i=0;i<3000;i++)
+        { cout<<"to txt: "<<value<<str<<endl; }
+        for(int i=0;i<3000;i++)
+        { cout<<"to txt: "<<value<<str<<endl; }
+        for(int i=0;i<3000;i++)
+        { cout<<"to txt: "<<value<<str<<endl; }
+        for(int i=0;i<3000;i++)
+        { cout<<"to txt: "<<value<<str<<endl; }
+
+//        for(int i=0;i<3000;i++)
+//        { printf("to txt: %d %s\n",value,str.c_str()); }
+//        for(int i=0;i<3000;i++)
+//        { printf("to txt: %d %s\n",value,str.c_str()); }
+//        for(int i=0;i<3000;i++)
+//        { printf("to txt: %d %s\n",value,str.c_str()); }
+//        for(int i=0;i<3000;i++)
+//        { printf("to txt: %d %s\n",value,str.c_str()); }
+
+#else
+        vinit_f("test_vlogf.txt",false,vlog::e_info);
+        vinit_c(vlog::e_info);
+        for(int i=0;i<3000;i++)
+        { vloge("to txt: " vv(value) vv(str) vl 3.14 vl 1234 vl "asd"); }
+        for(int i=0;i<3000;i++)
+        { vlogw("to txt: " vv(value) vv(str) vl 3.14 vl 1234 vl "asd"); }
+        for(int i=0;i<3000;i++)
+        { vlogd("to txt: " vv(value) vv(str) vl 3.14 vl 1234 vl "asd"); }
+        for(int i=0;i<3000;i++)
+        { vlogf("to txt: " vv(value) vv(str) vl 3.14 vl 1234 vl "asd"); }
+#endif
+        cout<<"== vlog time test =="<<endl;
+    }
+}
+
 #endif
 
 
-#include <typeindex>
+
 
 int main()
 {
     A aa;
     B bb;
 
-
-//    int value =294;
-//    double bbg = 3.14541;
-//    auto ji =bbg;
-//    ji::
-//    ji::type_info::name();
-//    cout<<typeid (value).type_info::name()<<endl;
-//    cout<<typeid (bbg).name()<<endl;
-
 //    t_vlogf();
 //    t_stm();
-    t_stmv();
+//    t_stmv();
 //    t_for();
-//    t_push();
+//    t_timel();
 
     cout << "Hello World!" << endl;
     return 0;

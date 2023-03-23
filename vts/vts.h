@@ -8,6 +8,10 @@
 #define VOPEN_STMV
 #define VOPEN_FOR
 #define VOPEN_PUSH
+#define VOPEN_TIME
+
+
+
 //#define VLOG_CLOSE //开启此宏将取消所有注释--头文件之前定义
 //=====
 
@@ -366,11 +370,6 @@ struct stmv
 //===== for =====
 #ifdef VOPEN_FOR
 
-namespace vts
-{
-//===== vts =====
-
-
 //功能:直接打印(包括换行)或者提供快捷的for版本
 //      提供对象版本和指针版本,后缀_p为指针版本
 //for_show : 根据迭代器打印
@@ -395,55 +394,64 @@ namespace vts
 #define for_n(n) \
     for(size_t index_it_for=0;index_it_for<n;index_it_for++)
 
-
-//===== vts =====
-}
 #endif //VOPEN_FOR
 //===== for =====
 
 
-//===== push =====
-#ifdef VOPEN_PUSH
+//===== time =====
+#ifdef VOPEN_TIME
 
-#include <memory>
-#include <functional>
+#include <chrono>
+#include <iostream>
+using namespace std;
+using namespace std::chrono::_V2;
+using namespace std::chrono;
 
 namespace vts
 {
-//===== vts =====
 
-//===== define: push arr =====
-//功能:op_dot类对","操作运算符进行重载，使得op_dot可以向标准库容器push内容
-//      提供两个宏对容器进行操作:
-//      new_arr:[容器对象][容器类型][数据类型][push的内容]
-//      push_arr:[容器对象][push的内容]
-template <template<class,class> class Tcont,class Ttype,
-          class Talloc = std::allocator<Ttype>>
-class op_dot
+//!
+//! 说明：主要用于计算函数运行的时间，测试函数性能
+//!         steady_clock时间：精确到纳秒的均速时间
+//!
+//! 例子：
+//!     {
+//!         ctimel tm;
+//!         func();
+//!     }//到这里析构退出并打印时间
+//!
+//! 原理：构建对象时开始计时，析构时打印时间
+//!
+class ctimel
 {
 public:
-    op_dot(std::function<void(Ttype)> func)
-    { sp_arr=std::make_shared<Tcont<Ttype,Talloc>>(); func_push=func; }
-    op_dot& operator,(const Ttype &type)
-//    { sp_arr->push_back(type); return *this; }
-    { func_push(type); return *this; }
-    std::shared_ptr<Tcont<Ttype,Talloc>> get_arr(){ return sp_arr;}
-private:
-    std::shared_ptr<Tcont<Ttype,Talloc>> sp_arr;
-    std::function<void(Ttype)> func_push;
+    ctimel() { _begin = steady_clock::now(); }
+    ctimel(bool show) : is_show(show) { _begin = steady_clock::now(); }
+    ~ctimel(){ show(); }
+
+    inline void show()
+    {
+        //顺序 [纳秒|微秒|毫秒|秒]
+        auto loss = steady_clock::now() - _begin;
+        std::cout<<"[nan: "<<loss.count()
+                <<"|mic: "<<duration_cast<microseconds>(loss).count()
+               <<"|mil: "<<duration_cast<milliseconds>(loss).count()
+              <<"|sec: "<<duration_cast<seconds>(loss).count()
+             <<"]"<<std::endl;
+    }
+
+    inline void update() { _begin = steady_clock::now(); }
+
+protected:
+    bool is_show = true;
+    time_point<steady_clock,nanoseconds> _begin;
 };
 
-#define new_arr(arr,arr_type,type,...) \
-    op_dot<arr_type,type> obj##arr; auto arr = obj##arr.get_arr(); obj##arr,__VA_ARGS__
-
-#define push_arr(arr,...) \
-    obj##arr,__VA_ARGS__
 
 
-//===== vts =====
 }
-#endif //VOPEN_FOR
-//===== push =====
+#endif //VOPEN_TIME
+//===== time =====
 
 
 #endif // VTS_H
