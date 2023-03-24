@@ -86,6 +86,7 @@ void t_stm()
     using namespace std;
     string a = "1-22-333-4444-55555";
     cout<<"ret = "<<vts::stm(a)("-",0,2)<<endl;
+    cout<<"ret = "<<vts::stm("1-22-333-4444-55555")("-",0,2)<<endl;
     //[ret = 1-22-333]
     cout<<"ret = "<<vts::stm(a)("-",-1,-1)<<endl;
     //[ret = 55555]
@@ -170,15 +171,14 @@ void t_for()
 
 
 #if 1
-
-void func()
-{
-    for(size_t i=0;i<400000000;i++) {}
-}
-
+#include <unistd.h>
 void t_timel()
 {
     {
+        auto func = [](){
+            for(size_t i=0;i<400000000;i++) {}
+        };
+
         vts::ctimel tm;
         func();
         tm.show();
@@ -187,7 +187,7 @@ void t_timel()
         tm.show();
 
         tm.update();
-        func();
+        sleep(1);
     }
 
     {
@@ -243,6 +243,14 @@ void t_timel()
 #endif
         cout<<"== vlog time test =="<<endl;
     }
+
+
+    cout<<"== ctimes =="<<endl;
+    vts::ctimes ct;
+    cout<<ct.date_now()<<endl;
+    cout<<ct.date_now("%H:%M:%S")<<endl;
+    time_t t1 = ct.time_now();
+    cout<<ct.to_format(t1)<<endl;
 }
 
 #endif

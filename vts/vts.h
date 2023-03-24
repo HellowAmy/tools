@@ -199,7 +199,7 @@ struct stm
 
     template<class ...Tarr> string split_t(){ return v_str; }
     template<class ...Tarr>
-    string split_t(const string &flg,int begin,int end,Tarr ...arg)
+    string split_t(const string &flg,int begin,int end,const Tarr &...arg)
     {
         if((begin < 0) && (end < 0)) v_str = split_back(v_str,flg,begin,end);
         else v_str = split_go(v_str,flg,begin,end);
@@ -207,7 +207,7 @@ struct stm
     }
 
     template<class ...Tarr>
-    string operator()(Tarr ...arg) { return split_t(arg...); }
+    string operator()(const Tarr &...arg) { return split_t(arg...); }
 
     //反向切割:反向参数传递
     string split_back(const string &str,const string &flg, int end,int begin)
@@ -308,7 +308,7 @@ struct stmv
     stmv(const string &str) : v_str(str) { vec_bit.resize(str.size(),false); }
 
     template<class ...Tarr>
-    vector<string> operator()(Tarr ...arg) { return push_flg(arg...); }
+    vector<string> operator()(const Tarr &...arg) { return push_flg(arg...); }
 
     //获取切割符
     template<class ...Tarr> vector<string> push_flg()
@@ -404,7 +404,6 @@ struct stmv
 #include <chrono>
 #include <iostream>
 using namespace std;
-using namespace std::chrono::_V2;
 using namespace std::chrono;
 
 namespace vts
@@ -426,8 +425,7 @@ class ctimel
 {
 public:
     ctimel() { _begin = steady_clock::now(); }
-    ctimel(bool show) : is_show(show) { _begin = steady_clock::now(); }
-    ~ctimel(){ show(); }
+    ~ctimel() { show(); }
 
     inline void show()
     {
@@ -443,10 +441,34 @@ public:
     inline void update() { _begin = steady_clock::now(); }
 
 protected:
-    bool is_show = true;
     time_point<steady_clock,nanoseconds> _begin;
 };
 
+//!
+//! 显示可视化的时间
+//!
+class ctimes
+{
+public:
+    //现在的时间点-可视化
+    string date_now(const string &format = "%Y-%m-%d %H:%M:%S")
+    {
+        char ret[1024];
+        time_t t = system_clock::to_time_t(system_clock::now());
+        strftime(ret,sizeof(ret),format.c_str(),localtime(&t));
+        return ret;
+    }
+
+    //格式化时间-可视化
+    string to_format(const time_t &t,
+        const string &format = "%Y-%m-%d %H:%M:%S")
+    {
+        char ret[1024];
+        strftime(ret,sizeof(ret),format.c_str(),localtime(&t));
+        return ret;
+    }
+    time_t time_now(){ time_t t; return time(&t); };//当前时间
+};
 
 
 }
