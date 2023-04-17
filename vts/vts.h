@@ -427,6 +427,34 @@ public:
     ctimel() { _begin = steady_clock::now(); }
     ~ctimel() { show(); }
 
+    inline string to_str()
+    {
+        //顺序 [纳秒|微秒|毫秒|秒]
+        auto loss = steady_clock::now() - _begin;
+        string str =
+                "[nan: " + std::to_string(loss.count()) +
+                "|mic: " + std::to_string(duration_cast<microseconds>(loss).count()) +
+                "|mil: " + std::to_string(duration_cast<milliseconds>(loss).count()) +
+                "|sec: " + std::to_string(duration_cast<seconds>(loss).count()) +
+                "]\n";
+        return str;
+    }
+
+    inline void show_str(const string str) { cout<<str<<endl; }
+    inline void show() { show_str(to_str()); }
+    inline void update() { _begin = steady_clock::now(); }
+
+protected:
+    time_point<steady_clock,nanoseconds> _begin;
+};
+
+/*
+class ctimel
+{
+public:
+    ctimel() { _begin = steady_clock::now(); }
+    ~ctimel() { show(); }
+
     inline void show()
     {
         //顺序 [纳秒|微秒|毫秒|秒]
@@ -443,6 +471,7 @@ public:
 protected:
     time_point<steady_clock,nanoseconds> _begin;
 };
+*/
 
 //!
 //! 显示可视化的时间
@@ -460,8 +489,7 @@ public:
     }
 
     //格式化时间-可视化
-    string to_format(const time_t &t,
-        const string &format = "%Y-%m-%d %H:%M:%S")
+    string to_format(const time_t &t, const string &format = "%Y-%m-%d %H:%M:%S")
     {
         char ret[1024];
         strftime(ret,sizeof(ret),format.c_str(),localtime(&t));
