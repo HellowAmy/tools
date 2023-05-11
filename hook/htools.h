@@ -6,8 +6,8 @@
 #include "str_sc.h"
 
 
-const char *file_table = "/home/red/test/hook/file_table.txt";  //文件表格
-const char *file_log = "/home/red/test/hook/file_log.txt";      //日志文件
+const char *file_table  = "/home/red/open/github/tools/hook/file_table.txt";  //文件表格
+const char *file_log    = "/home/red/open/github/tools/hook/file_log.txt";    //日志文件
 
 #define vlogf(fm,...) do{                       \
     FILE *fd = fopen(file_log,"a+");            \
@@ -129,6 +129,7 @@ int get_disk_rule(const char* filename,const char* pname,char *rule)
 
     if(get_disk_serial(disk_name,disk_serial,sizeof(disk_serial)) == 1)
     {
+        vlogf("[disk_serial]: [%s]",disk_serial);
         if(check_table(filename,disk_serial,rule) == 1)
         {
             ret = 1;

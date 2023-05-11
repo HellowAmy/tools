@@ -40,27 +40,35 @@ static int (*org_umount2) (const char *__special_file, int __flags) = NULL;
 void __attribute__ ((constructor)) before_load(void)
 {
    if(org_mount == NULL) org_mount = dlsym(RTLD_NEXT, "mount");
-   if(org_umount == NULL) org_umount = dlsym(RTLD_NEXT, "mount");
-   if(org_umount2 == NULL) org_umount2 = dlsym(RTLD_NEXT, "mount");
+   if(org_umount == NULL) org_umount = dlsym(RTLD_NEXT, "umount");
+   if(org_umount2 == NULL) org_umount2 = dlsym(RTLD_NEXT, "umount2");
 }
 
+int umount (const char *__special_file)
+{
+    vlogf("[umount]: [%s]",__special_file);
+    return org_umount(__special_file);
+}
 
-//生成.SO mount符号函数，先于调用系统mount
+int umount2 (const char *__special_file, int __flags)
+{  
+    vlogf("[umount2]: [%s : %d]",__special_file,__flags);
+    return org_umount2(__special_file,__flags); 
+}
+
 int mount(const char *__special_file, const char *__dir,
           const char *__fstype, unsigned long int __rwflag,
           const void *__data)
 {
-
-    vlogf("[%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
+    vlogf("[mount]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
 
     char disk_rule[256];
     int rule = 0;
-    if(get_disk_rule(file_table,"/dev/sdb",disk_rule) == 1)
+    if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
     {
         rule = rule_cmp(disk_rule);
     }
     show_log(rule);
-
 
     //拦截
     if(rule == 2) return org_mount(__special_file,__dir,__fstype,MS_RDONLY,__data);
