@@ -6,8 +6,8 @@
 #include "str_sc.h"
 
 
-const char *file_table  = "/home/red/open/github/tools/hook/file_table.txt";  //文件表格
-const char *file_log    = "/home/red/open/github/tools/hook/file_log.txt";    //日志文件
+const char *file_table  = "/etc/hook_usb/file_table.txt";  //文件表格
+const char *file_log    = "/etc/hook_usb/file_log.txt";    //日志文件
 
 #define vlogf(fm,...) do{                       \
     FILE *fd = fopen(file_log,"a+");            \

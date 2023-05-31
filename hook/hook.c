@@ -10,95 +10,129 @@
 #include "htools.h"
 
 ///* Mount a filesystem.  */
-//extern int mount (const char *__special_file, const char *__dir,
+// extern int mount (const char *__special_file, const char *__dir,
 //		  const char *__fstype, unsigned long int __rwflag,
 //		  const void *__data) __THROW;
 
 ///* Unmount a filesystem.  */
-//extern int umount (const char *__special_file) __THROW;
+// extern int umount (const char *__special_file) __THROW;
 
 ///* Unmount a filesystem.  Force unmounting if FLAGS is set to MNT_FORCE.  */
-//extern int umount2 (const char *__special_file, int __flags) __THROW;
+// extern int umount2 (const char *__special_file, int __flags) __THROW;
 
+static int (*org_mount)(const char *__special_file, const char *__dir,
+                        const char *__fstype, unsigned long int __rwflag,
+                        const void *__data) = NULL;
+static int (*org_umount)(const char *__special_file) = NULL;
 
-static int (*org_mount) (const char *__special_file, const char *__dir,
-          const char *__fstype, unsigned long int __rwflag,
-          const void *__data) = NULL;
-static int (*org_umount) (const char *__special_file) = NULL;
+static int (*org_umount2)(const char *__special_file, int __flags) = NULL;
 
-static int (*org_umount2) (const char *__special_file, int __flags) = NULL;
+// extern char * __progname;
 
+// static int (*hook_mount)(const  char  *source,  const char *target, const char *filesystemtype, unsigned long mountflags, const void *data)=NULL;
+// #define LINE_MAX 1024
+// const char* filepath = "/tmp/1.txt";
 
-
-//extern char * __progname;
-
-//static int (*hook_mount)(const  char  *source,  const char *target, const char *filesystemtype, unsigned long mountflags, const void *data)=NULL;
-//#define LINE_MAX 1024
-//const char* filepath = "/tmp/1.txt";
-
-//hook_open保存系统调用open函数指针
-void __attribute__ ((constructor)) before_load(void)
+// hook_open保存系统调用open函数指针
+void __attribute__((constructor)) before_load(void)
 {
-   if(org_mount == NULL) org_mount = dlsym(RTLD_NEXT, "mount");
-   if(org_umount == NULL) org_umount = dlsym(RTLD_NEXT, "umount");
-   if(org_umount2 == NULL) org_umount2 = dlsym(RTLD_NEXT, "umount2");
+    if (org_mount == NULL)
+        org_mount = dlsym(RTLD_NEXT, "mount");
+    if (org_umount == NULL)
+        org_umount = dlsym(RTLD_NEXT, "umount");
+    if (org_umount2 == NULL)
+        org_umount2 = dlsym(RTLD_NEXT, "umount2");
 }
 
-int umount (const char *__special_file)
+int umount(const char *__special_file)
 {
-    vlogf("[umount]: [%s]",__special_file);
+    vlogf("[umount]: [%s]", __special_file);
     return org_umount(__special_file);
 }
 
-int umount2 (const char *__special_file, int __flags)
-{  
-    vlogf("[umount2]: [%s : %d]",__special_file,__flags);
-    return org_umount2(__special_file,__flags); 
+int umount2(const char *__special_file, int __flags)
+{
+    vlogf("[umount2]: [%s : %d]", __special_file, __flags);
+    return org_umount2(__special_file, __flags);
 }
 
 int mount(const char *__special_file, const char *__dir,
           const char *__fstype, unsigned long int __rwflag,
           const void *__data)
 {
-    vlogf("[mount]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
+    vlogf("[mount]: [%s : %s : %s : %ld]", __special_file, __dir, __fstype, __rwflag);
 
-    char disk_rule[256];
-    int rule = 0;
-    if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
+    // 数据防空
+    if (__special_file && __dir && __fstype)
     {
-        rule = rule_cmp(disk_rule);
+        if (find_c(__special_file, "/dev/", 0) == -1)
+        {
+            vlogf("[mount]: err: return org, not dev");
+            return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
+        }
+
+        char disk_rule[256];
+        int rule = 0;
+        if (get_disk_rule(file_table, __special_file, disk_rule) == 1)
+        {
+            rule = rule_cmp(disk_rule);
+        }
+        show_log(rule);
+        vlogf("[mount rule]: %d", rule);
+
+        // 拦截
+        if (rule == 2) return org_mount(__special_file, __dir, __fstype, MS_RDONLY, __data);
+        else if (rule == 3) return -1;
     }
-    show_log(rule);
+    
+    vlogf("[mount]: return org");
+    return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
 
-    //拦截
-    if(rule == 2) return org_mount(__special_file,__dir,__fstype,MS_RDONLY,__data);
-    else if(rule == 3) return -1;
+    //     is_find = 0;
+    // if(find_c(__special_file,"/dev/",0) == -1)
+    //     is_find = 0;
 
-    return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
+    // if(is_find == 0)
+    // {
+    //     vlogf("org exit");
+    //     return org_mount(__special_file,__dir,__fstype,__rwflag,__data);
+    // }
+
+    // vlogf("[mount in]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
+    // // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
+
+    // char disk_rule[256];
+    // int rule = 0;
+    // if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
+    // {
+    //     rule = rule_cmp(disk_rule);
+    // }
+    // show_log(rule);
+    // vlogf("[mount rule]: %d",rule);
+
+    // //拦截
+    // if(rule == 2) return org_mount(__special_file,__dir,__fstype,MS_RDONLY,__data);
+    // else if(rule == 3) return -1;
+
+    // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
 }
-
-
 
 //(const  char  *source,  const char *target, const char *filesystemtype, unsigned long mountflags, const void *data)
 //{
 
 //    return
 //	char buf2[256];
-//memset(buf2,0,sizeof(buf2));
+// memset(buf2,0,sizeof(buf2));
 //	ss(source,buf2);
 
 //	char get_usb_key[256];
 //    char lsblk[50]="lsblk --nodeps -no serial  ";
 //    memset(get_usb_key,0,sizeof(get_usb_key));
-	
+
 //    strcat(lsblk,buf2);
 //    FILE *fp2=popen(lsblk,"r");
 //    fgets(get_usb_key,256,fp2);
 //    fclose(fp2);
-
-
-	
-
 
 //   FILE *fp1;
 //   fp1 = fopen("/home/kylin/桌面/hook_mount/2.txt", "rw+");
