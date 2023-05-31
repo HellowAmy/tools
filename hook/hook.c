@@ -46,13 +46,13 @@ void __attribute__((constructor)) before_load(void)
 
 int umount(const char *__special_file)
 {
-    vlogf("[umount]: [%s]", __special_file);
+    // vlogf("[umount]: [%s]", __special_file);
     return org_umount(__special_file);
 }
 
 int umount2(const char *__special_file, int __flags)
 {
-    vlogf("[umount2]: [%s : %d]", __special_file, __flags);
+    // vlogf("[umount2]: [%s : %d]", __special_file, __flags);
     return org_umount2(__special_file, __flags);
 }
 
@@ -60,34 +60,29 @@ int mount(const char *__special_file, const char *__dir,
           const char *__fstype, unsigned long int __rwflag,
           const void *__data)
 {
-    vlogf("[mount]: [%s : %s : %s : %ld]", __special_file, __dir, __fstype, __rwflag);
+    // vlogf("[mount]: [%s : %s : %s : %ld]", __special_file, __dir, __fstype, __rwflag);
 
-<<<<<<< HEAD
     // 数据防空
     if (__special_file && __dir && __fstype)
-=======
-    int is_find = 1;
-    if(__special_file && __dir && __fstype) 
-        is_find = 0;
-    if(find_c(__special_file,"/dev/",0) == -1) 
-        is_find = 0;
-
-    if(is_find == 0) 
-        return org_mount(__special_file,__dir,__fstype,__rwflag,__data);
-
-    vlogf("[mount in]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
-    // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
-
-    char disk_rule[256];
-    int rule = 0;
-    if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
->>>>>>> 0fea331bfe6f0b7e349533eff5521d29e04432b2
     {
-        if (find_c(__special_file, "/dev/", 0) == -1)
+        //磁盘类型排除
+        if(find_c(__special_file, "/dev/", 0) == -1)
         {
-            vlogf("[mount]: err: return org, not dev");
             return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
         }
+
+        //主盘屏蔽拦截
+        char disk_name[256];
+        ch_disk_name(__special_file,disk_name);
+        if(strcmp(disk_name,"/dev/sda") == 0)
+        {
+            return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
+        }
+
+
+        //== 判断开始 == 
+        vlogf("[mount dev]: %s",__special_file);
+        // return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
 
         char disk_rule[256];
         int rule = 0;
@@ -98,12 +93,14 @@ int mount(const char *__special_file, const char *__dir,
         show_log(rule);
         vlogf("[mount rule]: %d", rule);
 
+        return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
+
         // 拦截
         if (rule == 2) return org_mount(__special_file, __dir, __fstype, MS_RDONLY, __data);
         else if (rule == 3) return -1;
     }
     
-    vlogf("[mount]: return org");
+    // vlogf("[mount]: return org");
     return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
 
     //     is_find = 0;

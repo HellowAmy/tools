@@ -1,4 +1,4 @@
-./close_hook.sh
+./rm_hook.sh
 
 osName=libhook.so
 hookPath=/etc/hook_usb

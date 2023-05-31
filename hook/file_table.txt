@@ -1,8 +1,5 @@
-[info]##open##1##
-[info]##size##6##
+[info]##open##0##
+[info]##size##3##
 [disk]##1##NULL##RW##
 [disk]##2##291155090CBF5700##RW##
 [disk]##3##10000000000000000001##RW##
-[disk]##4##8EE7E639##OR##
-[disk]##5##910B33A0##OR##
-[disk]##6##F759567A##RW##
