@@ -62,8 +62,26 @@ int mount(const char *__special_file, const char *__dir,
 {
     vlogf("[mount]: [%s : %s : %s : %ld]", __special_file, __dir, __fstype, __rwflag);
 
+<<<<<<< HEAD
     // 数据防空
     if (__special_file && __dir && __fstype)
+=======
+    int is_find = 1;
+    if(__special_file && __dir && __fstype) 
+        is_find = 0;
+    if(find_c(__special_file,"/dev/",0) == -1) 
+        is_find = 0;
+
+    if(is_find == 0) 
+        return org_mount(__special_file,__dir,__fstype,__rwflag,__data);
+
+    vlogf("[mount in]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
+    // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
+
+    char disk_rule[256];
+    int rule = 0;
+    if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
+>>>>>>> 0fea331bfe6f0b7e349533eff5521d29e04432b2
     {
         if (find_c(__special_file, "/dev/", 0) == -1)
         {
