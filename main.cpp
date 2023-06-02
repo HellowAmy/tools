@@ -256,10 +256,95 @@ void t_timel()
 #endif
 
 
+#include "Tvlog.h"
+#include <vector>
+#include <list>
 
+
+
+//"["#value": "<<value<<"] "
+void t_Tvlog()
+{
+    vlevel(level4,e_debug); //等级
+
+    //普通打印
+    vloge("== 普通打印 ==");
+    vlogi("e_info level");
+    vlogd("this template log");
+    vlogd("10+20 ret: " << 10+20);
+    vlogw("PI: "<<3.14);
+    vloge("2^4 calculate: "<<2*2<<" * "<<2*2<<" = "<<4*4);
+
+    //快速打印结果
+    vloge("== 快速打印结果 ==");
+    int count = 0;
+    for(int i=0;i<=100;i++) count += i;
+    string str = "hello world";
+    int ret = 10*60;
+    vlogd($1(str) $1(ret) $1(count));
+
+    //容器打印
+    vector<string> vec;
+    list<string> ls;
+    for(int i=0;i<10;i++)
+    {
+        vec.push_back("vec:"+to_string(i));
+        ls.push_back("ls:"+to_string(i));
+    }
+    vlogc($v1,vec);
+    vlogc($v2,vec,4);
+    vlogc($v3,vec,3,"[","]");
+    vlogc($v4,vec,vec.begin()+2,vec.end()-2);
+    vlogc($v2,ls,5);
+    vlogc($v2,ls,6);
+
+
+//    {
+//        int i = 0;
+//        cout<<"===== ====="<<endl;
+//        for(const auto &a:vec)
+//        {
+//            cout<<"["<<a<<"] ";
+//            i++;
+//            if(i == 5) cout<<endl;
+//        }
+//        cout<<endl;
+//        cout<<"===== ====="<<endl;
+//    }
+
+//    {
+//        int i = 0;
+//        cout<<"===== ====="<<endl;
+//        for(const auto &a:ls)
+//        {
+//            cout<<"["<<a<<"] ";
+//            i++;
+//            if(i == 5) cout<<endl;
+//        }
+//        cout<<endl;
+//        cout<<"===== ====="<<endl;
+//    }
+
+
+//    if()
+
+
+
+
+
+
+
+
+}
 
 int main()
 {
+
+//    Tsingle_d<Tvlog<level4::level>>::get()->set_level(level4::level::e_info);
+//    *Tsingle_d<Tvlog<level4::level>>::get()<<level4::level::e_info<<"12341"<<endl;
+//    *Tsingle_d<Tvlog<level4::level>>::get()<<level4::level::e_warning<<546777<<endl;
+
+
     A aa;
     B bb;
 
@@ -268,6 +353,7 @@ int main()
 //    t_stmv();
 //    t_for();
 //    t_timel();
+    t_Tvlog();
 
     cout << "Hello World!" << endl;
     return 0;

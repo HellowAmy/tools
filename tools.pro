@@ -11,6 +11,7 @@ SOURCES += \
         vts/vts.cpp
 
 HEADERS += \
+    Tvlog.h \
     a.h \
     b.h \
     vts/vts.h
