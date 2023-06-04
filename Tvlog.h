@@ -159,6 +159,8 @@ private:
     <<"[Err]["<<__FILE__<<":<"<<__LINE__<<">] <<<< "<<__VA_ARGS__<<endl     \
 
 
+
+
 //Tsingle_d<Tvlog<level4::level>>::get()->set_level(level4::level::e_info);
 
 //*Tsingle_d<Tvlog<level4::level>>::get()<<level4::level::e_info<<"12341"<<endl;
