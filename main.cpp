@@ -255,14 +255,14 @@ void t_timel()
 
 #endif
 
-
+#define VLOG_COLOR
 #include "Tvlog.h"
 #include <vector>
 #include <list>
 
 void t_Tvlog()
 {
-    vlevel(level4,e_debug); //等级
+    Tsvlog::get()->set_level(level4::level::e_info); //日志等级
 
     //普通打印
     vloge("== 普通打印 ==");
@@ -271,6 +271,7 @@ void t_Tvlog()
     vlogd("10+20 ret: " << 10+20);
     vlogw("PI: "<<3.14);
     vloge("2^4 calculate: "<<2*2<<" * "<<2*2<<" = "<<4*4);
+    vloge("2^4 calculate:" $1(2*2) $1(2*2) "=" $1(4*4));
 
     //快速打印结果
     vloge("== 快速打印 ==");
@@ -288,27 +289,41 @@ void t_Tvlog()
         vec.push_back("vec:"+to_string(i));
         ls.push_back("ls:"+to_string(i));
     }
-    vloge("== 容器打印 ==");
-    vlogc($v1,ls);
-    vlogc($v2,ls,4);
-    vlogc($v3,vec,3,"[","]");
-    vlogc($v4,vec,vec.begin()+2,vec.end()-2);
+    vloge("== 容器打印--宏 ==");
+    vlogc($v1,ls);                              //打印容器
+    vlogc($v2,ls,4);                            //打印容器，带换行
+    vlogc($v3,vec,vec.begin()+2,vec.end()-2);   //打印容器，指定迭代器范围
+    vlogc($v4,vec,3,"[","]");                   //打印容器，制定分界符
+
+    vloge("== 容器打印--模板 ==");
+    {
+        vector<int> vec;
+        for(int i=0;i<25;i++)
+        {
+            vec.push_back(i);
+        }
+        vlogp(vec);
+        vlogp(vec,5);
+        vlogp(vec,5,"][");
+        vlogp(vec.begin(),vec.end(),5);
+        vlogp(vec.begin(),vec.end(),5,".");
+    }
 
     int ifor = 1000000;
 
-#if 1
+#if 0
     {
         vts::ctimel c;
         for(int i=0;i<ifor;i++)
         {
-            vlogi("hellow world");
+            vlogi($1(i) "hellow world");
         }
         string s1 = c.to_str();
         int value=100;
         string s = "hellow world";
         for(int i=0;i<ifor;i++)
         {
-            vlogi($1(value) $1(s));
+            vlogi($1(i) $1(value) $1(s));
         }
         string s2 = c.to_str();
     }
@@ -350,9 +365,50 @@ void t_Tvlog()
     }
 #endif
 
+}
 
+void t_Tflog()
+{
+    Tsflog::get()->init("Tflog.log",false);
+    Tsflog::get()->set_level(level4::level::e_debug);
+    Tsflog::get()->set_limit(5);
 
+    //普通打印
+    floge("== 普通打印 ==");
+    flogi("e_info level");
+    flogd("this template log");
+    flogd("10+20 ret: " << 10+20);
+    flogw("PI: "<<3.14);
+    floge("2^4 calculate: "<<2*2<<" * "<<2*2<<" = "<<4*4);
+    floge("2^4 calculate:" $1(2*2) $1(2*2) "=" $1(4*4));
 
+    //快速打印结果
+    floge("== 快速打印 ==");
+    int count = 0;
+    for(int i=0;i<=100;i++) count += i;
+    string str = "hello world";
+    int ret = 10*60;
+    flogd($1(str) $1(ret) $1(count));
+
+    int ifor = 1000000;
+
+#if 0
+    {
+        vts::ctimel c;
+        for(int i=0;i<ifor;i++)
+        {
+            flogw($1(i) "hellow world");
+        }
+        string s1 = c.to_str();
+        int value=100;
+        string s = "hellow world";
+        for(int i=0;i<ifor;i++)
+        {
+            flogw($1(i) $1(value) $1(s));
+        }
+        string s2 = c.to_str();
+    }
+#endif
 }
 
 
@@ -384,19 +440,17 @@ void t_Tvlog()
 //[nan: 2025252118|mic: 2025252|mil: 2025|sec: 2]
 //[nan: 2004377021|mic: 2004377|mil: 2004|sec: 2]
 //[nan: 2091675392|mic: 2091675|mil: 2091|sec: 2]
-
-
-
 //[nan: 5899699028|mic: 5899699|mil: 5899|sec: 5]
 //[nan: 5296568542|mic: 5296568|mil: 5296|sec: 5]
 //[nan: 4606000975|mic: 4606000|mil: 4606|sec: 4]
 
+
+
+
 int main()
 {
 
-//    Tsingle_d<Tvlog<level4::level>>::get()->set_level(level4::level::e_info);
-//    *Tsingle_d<Tvlog<level4::level>>::get()<<level4::level::e_info<<"12341"<<endl;
-//    *Tsingle_d<Tvlog<level4::level>>::get()<<level4::level::e_warning<<546777<<endl;
+
 
 
 
@@ -409,10 +463,12 @@ int main()
 //    t_for();
 //    t_timel();
     t_Tvlog();
+//    t_Tflog();
+
+
+
+
 
     cout<<"===== end ====="<<endl;
-//    cout << "Hello 124124World!" << endl;
-//    cout << "Hello World!" << endl;
-//    cout << "Hello World!" << endl;
     return 0;
 }
