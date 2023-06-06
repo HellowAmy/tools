@@ -463,7 +463,7 @@ int main()
 //    t_for();
 //    t_timel();
     t_Tvlog();
-//    t_Tflog();
+    t_Tflog();
 
 
 
