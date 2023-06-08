@@ -6,13 +6,16 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/mount.h>
+#include <ctype.h>
 
-#include "htools.h"
+#include "str_sc.h"
 
-//返回hook函数
+
+//== 对应权限函数 ==
 #define FN_MOUNT_ORG org_mount(__special_file, __dir, __fstype, __rwflag, __data)   //放行权限
 #define FN_MOUNT_RO org_mount(__special_file, __dir, __fstype, MS_RDONLY, __data)   //只读权限
 #define FN_MOUNT_OO -1                                                              //拦截权限
+//== 对应权限函数 ==
 
 
 //== hook函数原型 ==
@@ -32,9 +35,21 @@ static int (*org_mount)(const char *__special_file, const char *__dir,
                         const void *__data) = NULL;
 static int (*org_umount)(const char *__special_file) = NULL;
 static int (*org_umount2)(const char *__special_file, int __flags) = NULL;
+
+// hook_open保存系统调用open函数指针
+void __attribute__((constructor)) before_load(void)
+{
+    if (org_mount == NULL)
+        org_mount = dlsym(RTLD_NEXT, "mount");
+    if (org_umount == NULL)
+        org_umount = dlsym(RTLD_NEXT, "umount");
+    if (org_umount2 == NULL)
+        org_umount2 = dlsym(RTLD_NEXT, "umount2");
+}
 //== hook函数原型 ==
 
 
+//== 文件与日志 ==
 //文件路径
 const char *file_table  = "/etc/hook_watch/file_table.txt";  //文件表格
 const char *file_log    = "/etc/hook_watch/file_log.txt";    //日志文件
@@ -48,8 +63,135 @@ const char *file_log    = "/etc/hook_watch/file_log.txt";    //日志文件
         fclose(fd);                             \
     }                                           \
 } while(0)
+//== 文件与日志 ==
 
 
+//===== 文件操作函数 =====
+//从字符尾部去除换行符号
+//参数1:需要去\n符号的字符串
+void less_enter(char *buf)
+{
+    size_t len = strlen(buf);
+    for(size_t i=0;i<len;i++)
+    {
+        if(buf[len -i -1] == '\n')
+        {
+           buf[len -i -1] = '\0';
+           return ;
+        }
+    }
+}
+
+//通过序列号查看文件表格的权限
+//参数1:文件表格
+//参数2:序列号
+//参数3:存储的权限
+//返回值:[1/0] 成功或者失败
+int check_table(const char *file_table,const char *pserial,char *prule)
+{
+    int is_open = 0;
+    int ret = 0;
+
+    FILE *fd = fopen(file_table,"r");
+    if(fd)
+    {
+        char buf[1024];
+        while(fgets(buf,sizeof (buf),fd) != NULL)
+        {
+            less_enter(buf);
+            if(is_open == 0)
+            {
+                char *cmd = split_ac(buf,"##",1,1);
+                char *op = split_ac(buf,"##",2,2);
+                if(strcmp(cmd,"open") == 0)
+                {
+                    if(strcmp(op,"1") == 0) is_open = 1;
+                    else is_open = -1;
+                }
+                free(op);
+                free(cmd);
+            }
+            else if(is_open == 1)
+            {
+                char *serial = split_ac(buf,"##",2,2);
+                char *rule = split_ac(buf,"##",3,3);
+                if(strcmp(serial,pserial) == 0)
+                {
+                    strcpy(prule,rule);
+                    ret = 1;
+                }
+                free(serial);
+                free(rule);
+            }
+            if(is_open == -1 || ret == 1) break;
+        }
+        fclose(fd);
+    }
+    return ret;
+}
+
+//修正磁盘名称,用于获取序列号
+//参数1:原磁盘名称
+//参数2:存储的新磁盘名称
+void ch_disk_name(const char *source,char *buf)
+{
+    strcpy(buf,source);
+    size_t len = strlen(buf);
+    for(size_t i=0;i<len;i++)
+    {
+        if(isdigit(buf[len -i -1])) buf[len -i -1] = '\0';
+        else break;
+    }
+}
+
+//通过修正的磁盘名称获取序列号
+//参数1:磁盘名称
+//参数2:存储的序列号
+//参数3:序列号长度
+//返回值:[1/0] 成功或者失败
+int get_disk_serial(const char* pname,char *serial,size_t size_serial)
+{
+    int ret = 0;
+    char cmd[256] = "lsblk --nodeps -no serial ";
+    strcat(cmd,pname);
+    FILE *fd = popen(cmd,"r");
+    if(fd)
+    {
+        if(fgets(serial,size_serial,fd) != NULL)
+        {
+            less_enter(serial);
+            ret = 1;
+        }
+        fclose(fd);
+    }
+    return ret;
+}
+
+//从文件表格中查找磁盘对应的权限
+//参数1:文件表格
+//参数2:磁盘名
+//参数3:存储的规则
+//参数4:存储的序列号
+//参数5:序列号长度
+//返回值:[1/0] 成功或者失败
+int get_disk_rule(const char* filename,const char* pname,char *rule,char *pserial,int size)
+{
+    int ret = 0;
+    char disk_name[256];
+    ch_disk_name(pname,disk_name);
+
+    if(get_disk_serial(disk_name,pserial,size) == 1)
+    { 
+        if(check_table(filename,pserial,rule) == 1) { ret = 1; }
+        else vlogf("err: check_table");
+    }
+    else vlogf("err: get_disk_serial");
+    return ret;
+}
+//===== 文件操作函数 =====
+
+
+//== 权限判断部分 == 
 //规则
 typedef enum en_rule en_rule;
 enum en_rule
@@ -58,7 +200,6 @@ enum en_rule
     e_limit,    //默认限制只读
     e_failed,   //文件中记录拦截则挂载失败
 };
-
 
 //显示日志
 void show_log(en_rule rule)
@@ -78,18 +219,10 @@ void rule_cmp(char *rule,en_rule *en)
     else if(strcmp(rule,"OR") == 0) *en = e_limit;
     else if(strcmp(rule,"OO") == 0) *en = e_failed;
 }
+//== 权限判断部分 == 
 
-// hook_open保存系统调用open函数指针
-void __attribute__((constructor)) before_load(void)
-{
-    if (org_mount == NULL)
-        org_mount = dlsym(RTLD_NEXT, "mount");
-    if (org_umount == NULL)
-        org_umount = dlsym(RTLD_NEXT, "umount");
-    if (org_umount2 == NULL)
-        org_umount2 = dlsym(RTLD_NEXT, "umount2");
-}
 
+//== 函数拦截部分 ==
 int umount(const char *__special_file)
 {
     // vlogf("[umount]: [%s]", __special_file);
@@ -134,7 +267,7 @@ int mount(const char *__special_file, const char *__dir,
             if(get_disk_rule(file_table, __special_file, 
                 disk_rule,disk_serial,sizeof(disk_serial)) == 1)
             {
-                rule_cmp(disk_rule,en); //根据文件表格的规则赋值权限
+                rule_cmp(disk_rule,&en); //根据文件表格的规则赋值权限
                 vlogf("[disk_serial]: [%s]",disk_serial);
             }
             else vlogf("open file_table err: get_disk_rule"); 
@@ -153,161 +286,9 @@ int mount(const char *__special_file, const char *__dir,
 
         vlogf("not found rule: return FN_MOUNT_RO");
         return FN_MOUNT_RO;
-
-
-        // switch (en)
-        // {
-        // case 0: {
-
-        // } break;
-        // case 1: return FN_MOUNT_ORG break;
-        // case 2: {} break;
-        // case 3: {} break;
-        // case 4: {} break;
-        //     break;
-        
-        // default:
-        //     break;
-        // }
-        // // 拦截
-        // if (rule == 2) return org_mount(__special_file, __dir, __fstype, MS_RDONLY, __data);
-        // else if (rule == 3) return -1;
     }
-    
-    // vlogf("[mount]: return org");
+
+    //存在空值时从这返回,一般为开机挂载系统目录时触发
     return FN_MOUNT_ORG; 
-    // return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
-
-    //     is_find = 0;
-    // if(find_c(__special_file,"/dev/",0) == -1)
-    //     is_find = 0;
-
-    // if(is_find == 0)
-    // {
-    //     vlogf("org exit");
-    //     return org_mount(__special_file,__dir,__fstype,__rwflag,__data);
-    // }
-
-    // vlogf("[mount in]: [%s : %s : %s : %ld]",__special_file,__dir,__fstype,__rwflag);
-    // // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
-
-    // char disk_rule[256];
-    // int rule = 0;
-    // if(get_disk_rule(file_table,__special_file,disk_rule) == 1)
-    // {
-    //     rule = rule_cmp(disk_rule);
-    // }
-    // show_log(rule);
-    // vlogf("[mount rule]: %d",rule);
-
-    // //拦截
-    // if(rule == 2) return org_mount(__special_file,__dir,__fstype,MS_RDONLY,__data);
-    // else if(rule == 3) return -1;
-
-    // return org_mount(__special_file,__dir,__fstype,__rwflag,__data); //MS_RDONLY
 }
-
-//(const  char  *source,  const char *target, const char *filesystemtype, unsigned long mountflags, const void *data)
-//{
-
-//    return
-//	char buf2[256];
-// memset(buf2,0,sizeof(buf2));
-//	ss(source,buf2);
-
-//	char get_usb_key[256];
-//    char lsblk[50]="lsblk --nodeps -no serial  ";
-//    memset(get_usb_key,0,sizeof(get_usb_key));
-
-//    strcat(lsblk,buf2);
-//    FILE *fp2=popen(lsblk,"r");
-//    fgets(get_usb_key,256,fp2);
-//    fclose(fp2);
-
-//   FILE *fp1;
-//   fp1 = fopen("/home/kylin/桌面/hook_mount/2.txt", "rw+");
-//   fprintf(fp1,"this is c ===%s\n,%s\n,%s\n,%s\n,%s\n",source,target,filesystemtype,get_usb_key,lsblk);
-//   fclose(fp1);
-
-//   return hook_mount(source,target,filesystemtype,mountflags,data);
-
-//   int shmid;
-//   char *shmaddr;
-
-////      key_t ftok(const char *pathname, int proj_id);
-//   key_t key;
-//   key = ftok("/tmp/shared",23);
-
-//    //create
-////      int shmget(key_t key, size_t size, int shmflg);
-//   shmid = shmget(key,1024*4,0);
-//   if(shmid == -1){
-//       return hook_mount(source,target,filesystemtype,mountflags,data);
-//   }
-//   int hook_ret;
-//   hook_ret = -1;
-//   FILE *fp;
-//   int line_len = 0;         // 文件每行的长度
-//   char buf[LINE_MAX] = {0}; // 行数据缓存
-//   fp = fopen(filepath, "r");
-//   if (NULL == fp)
-//   {
-//      //printf("open %s failed.\n", path);
-//      hook_ret = hook_mount(source,target,filesystemtype,mountflags,data);
-//      fclose(fp);
-//      return hook_ret;  //return zheng chang
-//   }
-//   while(fgets(buf, LINE_MAX, fp))
-//   {
-//      line_len = strlen(buf);
-//      //排除换行符
-//      if ('\n' == buf[line_len - 1])
-//      {
-//         buf[line_len - 1] = '\0';
-//         line_len--;
-//         if(0 == line_len) //空行
-//         {
-//           continue;
-//         }
-//      }
-//      //排除回车符
-//      if ('\r' == buf[line_len - 1])
-//      {
-//         buf[line_len - 1] = '\0';
-//         line_len--;
-//         if (0 == line_len) //空行
-//         {
-//            continue;
-//         }
-//      }
-//      // 对每行数据(buf)进行处理
-//      if(strstr(buf, source) != NULL)
-//      {
-//         if(buf[strlen(buf)-1] == '2') //read and write
-//         {
-//            hook_ret  = hook_mount(source,target,filesystemtype,mountflags,data);
-//         }
-//         if(buf[strlen(buf)-1] == '1') //read ouly
-//         {
-//             hook_ret  = hook_mount(source,target,filesystemtype,MS_RDONLY,data);
-//         }
-//         if(buf[strlen(buf)-1] == '0') //cann't
-//         {
-//             hook_ret  = -1;
-//         }
-//         break;
-//      }
-//   }
-//   if (0 == feof) // 未读到文件末尾
-//   {
-//      hook_ret = hook_mount(source,target,filesystemtype,mountflags,data);
-//      fclose(fp);
-//      return hook_ret;
-//   }
-//   //file no have source
-//   //file no have source
-//   //guangqu chuli
-//   //guangqu chuli
-//   fclose(fp);
-//   return hook_ret;
-//}
+//== 函数拦截部分 ==
