@@ -271,10 +271,14 @@ int mount(const char *__special_file, const char *__dir,
                 vlogf("[disk_serial]: [%s]",disk_serial);
             }
             else vlogf("open file_table err: get_disk_rule"); 
+            vlogf("####back####serial:%s####rule:%s####",disk_serial,disk_rule);
         }
         show_log(en); //显示最终权限
 
-        return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
+        // return org_mount(__special_file, __dir, __fstype, __rwflag, __data);
+
+        
+
 
         //返回权限对应函数指针
         switch (en)
