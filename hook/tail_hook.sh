@@ -1,1 +1,1 @@
-tail -f /etc/hook_usb/file_log.txt
+tail -f /etc/hook_watch/file_log.txt

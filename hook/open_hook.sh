@@ -1,7 +1,7 @@
 ./rm_hook.sh
 
 osName=libhook.so
-hookPath=/etc/hook_usb
+hookPath=/etc/hook_watch
 
 echo $hookPath/$osName > ld.so.preload
 sudo rm $hookPath/$osName
