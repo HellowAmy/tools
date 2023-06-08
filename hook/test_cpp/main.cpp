@@ -8,9 +8,6 @@
 
 using namespace std;
 
-
-
-
 //== 字符串类型转换 ==
 template<typename T>
 string to_string(const T& t){ ostringstream os; os<<t; return os.str(); }
@@ -18,7 +15,6 @@ string to_string(const T& t){ ostringstream os; os<<t; return os.str(); }
 template<typename T>
 T from_string(const string& str){ T t; istringstream iss(str); iss>>t; return t; }
 //== 字符串类型转换 ==
-
 
 
 //===== stmv =====
@@ -84,7 +80,6 @@ struct stmv
     }
 };
 //===== stmv =====
-
 
 
 //===== stm =====
@@ -327,7 +322,6 @@ list<string> create_table_list(list<ct_cmd> ls_cmd,list<ct_disk> ls_disk)
 }
 
 
-
 //== 显示操作 ==
 void show_file_table(const string &filename)
 {
@@ -551,7 +545,6 @@ bool update_dev(const string &filename)
 //== 界面代码 ==
 void show_wid()
 {
-
 string str =
 R"(|===== 磁盘管理系统 =====
 | 1.查看配置信息
@@ -677,14 +670,16 @@ void wid_init(const string &filename)
     cout<<err_ok<<endl;
     wid_show(filename);
 }
-//== 界面代码 ==
 
+void show_clear()
+{
+    system("clear");
+}
+//== 界面代码 ==
 
 
 int main()
 {
-
-
     string file_table = "/home/red/test/hook/file_table.txt";
 
 #if 1
@@ -711,16 +706,31 @@ int main()
         }
         else if(str_in == "4")
         {
-            wid_init(file_table);
+            {
+                cout<<"== 初始化会添加当前磁盘并清空旧数据,请谨慎 =="<<endl;
+                cout<<"1.确认"<<endl;
+                cout<<"2.取消"<<endl;
+                string s;
+                cin>>s;
+                if(s == "1") wid_init(file_table);
+            }
         }
         else if(str_in == "5")
         {
             bool ok = update_dev(file_table);
+            wid_show(file_table);
             if(ok) cout<<"== 成功追加新磁盘到磁盘权限管理系统 =="<<endl;
         }
         else if(str_in == "0") break;
 
-        cout<<endl;
+
+        {
+            cout<<"== 按任意键继续... =="<<endl;
+            char buf[1024];
+            cin.get();
+            cin.getline(buf,sizeof(buf));
+        }
+        show_clear();
     }
 
     cout<<"===== 欢迎下次登录 ====="<<endl;
