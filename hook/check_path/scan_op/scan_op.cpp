@@ -66,17 +66,28 @@ struct stmv
 };
 //===== stmv =====
 
-
-
 scan_op::scan_op()
 {
 
 }
 
-void scan_op::open_scan()
+void scan_op::open_scan(string cmd,string log)
 {
+    if(_cmd == "" || _log == "")
+    {
+        _cmd = cmd;
+        _log = log;
+    }
+
     thread (system,_cmd.c_str()).detach();
+    create_file(_log);
     observe_op();
+}
+
+void scan_op::create_file(string file)
+{
+    fstream fs(file,ios::out);
+    if(fs.is_open()) { fs.close(); }
 }
 
 void scan_op::observe_op()
@@ -99,8 +110,19 @@ void scan_op::observe_op()
                 string str = buf;
                 if(filter_op(str))
                 {
-                    watch_op(str);
+//                    cout<<""<<watch_op(str)<<endl;
+                    if(func_watch_op) func_watch_op(watch_op(str));
                 }
+            }
+            usleep(100000);
+            if(_max_file < ftell(fd))
+            {
+                fclose(fd);
+                {
+                    FILE *tm =fopen(_log.c_str(),"w");
+                    fclose(tm);
+                }
+                fd = fopen(_log.c_str(),"r");
             }
         }
         fclose(fd);
@@ -159,28 +181,20 @@ void scan_op::less_enter(char *buf)
     }
 }
 
-//        if(ch_txt == 1)
-//        {
-//            ch_txt = 0;
-//            cout<<"== 修改内容 =="<<endl;
-//        }
-//        else if(ch_name == 1)
-//        {
-//            ch_name = 0;
-//            cout<<"重命名: "<<str_ch_name<<" >> "<<name<<endl;
-//        }
-
-bool scan_op::watch_op(const string &str)
+string scan_op::watch_op(const string &str)
 {
+    string str_ret;             //最终保存结果
+    string flg = "    ";        //分隔符
+    string str_or = "[OR]"+flg; //原内容标记返回
+    string str_op = "[OP]:";    //分析到具体操作
+
     //解析信息
     auto vec = stmv(str)("    ");
-    if(vec.size() < 4) return false;
+    if(vec.size() < 4) return "";
     string time = vec[0];
     string path = vec[1];
     string name = vec[2];
     string even = vec[3];
-
-    cout<<"in: "<<str<<endl;
 
     //== 分析事件 ==
     static vector<string> vec_pre;  //保存上一条信息,用于分析
@@ -192,52 +206,70 @@ bool scan_op::watch_op(const string &str)
 
     //== 事件对应操作 ==
     //文件
-    function<void()> fn_create = [](){
-        cout<<"func:创建文件"<<endl;
+    function<void()> fn_create = [&](){
+        str_ret = str_or + str;
     };
-    function<void()> fn_open = [](){
-        cout<<"func:打开文件"<<endl;
+    function<void()> fn_open = [&](){
+        str_ret = str_or + str;
     };
-    function<void()> fn_delete = [](){
-        cout<<"func:删除文件"<<endl;
+    function<void()> fn_delete = [&](){
+        str_ret = str_op + "CH_DELETE:" +name +flg +str;
     };
-    function<void()> fn_modify = [](){
-        cout<<"func:修改内容"<<endl;
+    function<void()> fn_modify = [&](){
+        str_ret = str_or + str;
     };
-    function<void()> fn_move_from = [](){
-        cout<<"func:移除文件"<<endl;
+    function<void()> fn_move_from = [&](){
+        str_ret = str_op + "CH_DELETE:" +name +flg +str;
     };
     function<void()> fn_move_to = [&](){
-        if(ch_content)
+        if(ch_content) //修改内容
         {
             ch_content = false;
-            cout<<"func:修改内容"<<endl;
+            str_ret = str_op + "CH_CONTENT:" +name +flg +str;
         }
-        else if(ch_name)
+        else if(ch_name) //重命名
         {
             ch_name = false;
-            cout<<"func:重命名 ["<<vec_pre[2]<<" >> "<<name<<"]"<<endl;
+            if(vec_pre[1] != path)
+            {
+                str_ret = str_op + "CH_MOVE:" +vec_pre[1]+vec_pre[2] +
+                        ":TO:" +path+name +flg +str;
+            }
+            else
+            {
+                str_ret = str_op + "CH_NAME:" +vec_pre[1]+vec_pre[2] +
+                        ":TO:" +path+name +flg +str;
+            }
         }
-//        cout<<"func:fn_move_to"<<endl;
     };
 
     //目录
-    function<void()> fn_create_r = [](){
-        cout<<"func:创建目录"<<endl;
+    function<void()> fn_create_r = [&](){
+        str_ret = str_or + str;
     };
-    function<void()> fn_delete_r = [](){
-        cout<<"func:删除目录"<<endl;
+    function<void()> fn_delete_r = [&](){
+        str_ret = str_op + "CH_DELETE_R:" +name +flg +str;
     };
-    function<void()> fn_move_from_r = [](){
-        cout<<"func:移除目录"<<endl;
+    function<void()> fn_move_from_r = [&](){
+        str_ret = str_op + "CH_DELETE_R:" +name +flg +str;
     };
     function<void()> fn_move_to_r = [&](){
-        if(ch_name_r)
+        if(ch_name_r) //重命名
         {
             ch_name_r = false;
-            cout<<"func:重命名 ["<<vec_pre[2]<<" >> "<<name<<"]"<<endl;
+            if(vec_pre[1] != path)
+            {
+                str_ret = str_op + "CH_MOVE_R:" + vec_pre[1]+vec_pre[2] +
+                        ":TO:" +path+name +flg +str;
+            }
+            else
+            {
+                str_ret = str_op + "CH_NAME_R:" + vec_pre[1]+vec_pre[2] +
+                        ":TO:" +path+name +flg +str;
+            }
         }
-        cout<<"func:fn_move_to_r"<<endl;
+        else
+        { str_ret = str_or + str; }
     };
     //== 事件对应操作 ==
 
@@ -256,9 +288,6 @@ bool scan_op::watch_op(const string &str)
         { "MOVED_TO,ISDIR",fn_move_to_r },
     };
 
-
-
-
     //分析:修改内容
     if((name.find(".goutputstream") != string::npos))
     {
@@ -267,7 +296,7 @@ bool scan_op::watch_op(const string &str)
             vec_pre = vec;
             ch_content = true;
         }
-        return false;
+        return "";
     }
 
     //分析:修改名称
@@ -291,93 +320,6 @@ bool scan_op::watch_op(const string &str)
         it->second();
     }
 
-
-
-
-
-//    static int ch_txt = 0;
-//    if((name.find(".goutputstream") != string::npos))
-//    {
-//        vec_pre = vec;
-//        if(even == "MOVED_FROM") ch_txt = 1;
-//        return false;
-//    }
-
-//    static int ch_name = 0;
-//    static string str_ch_name;
-//    if(even == "MOVED_FROM")
-//    {
-//        str_ch_name = name;
-//        ch_name = 1;
-//    }
-
-//    static int ch_name_rd = 0;
-//    static string str_ch_name_rd;
-//    if(even == "MOVED_FROM,ISDIR")
-//    {
-//        str_ch_name_rd = name;
-//        ch_name_rd = 1;
-//    }
-
-
-
-//    if(even == "MOVED_FROM")
-//    {
-//        cout<<"== 移除文件 =="<<endl;
-//    }
-//    else if(even == "CREATE")
-//    {
-//        cout<<"== 创建文件 =="<<endl;
-//    }
-//    else if(even == "OPEN")
-//    {
-//        cout<<"== 打开文件 =="<<endl;
-//    }
-//    else if(even == "MOVED_TO")
-//    {
-//        if(ch_txt == 1)
-//        {
-//            ch_txt = 0;
-//            cout<<"== 修改内容 =="<<endl;
-//        }
-//        else if(ch_name == 1)
-//        {
-//            ch_name = 0;
-//            cout<<"重命名: "<<str_ch_name<<" >> "<<name<<endl;
-//        }
-//        else cout<<"== 文件重命名 =="<<endl;
-//    }
-//    else if(even == "DELETE")
-//    {
-//        cout<<"== 删除文件 =="<<endl;
-//    }
-//    else if(even == "MODIFY")
-//    {
-//        cout<<"== 修改内容:MODIFY =="<<endl;
-//    }
-
-
-//    else if(even == "DELETE,ISDIR")
-//    {
-//        cout<<"== 删除目录 =="<<endl;
-//    }
-//    else if(even == "CREATE,ISDIR")
-//    {
-//        cout<<"== 新建目录 =="<<endl;
-//    }
-//    else if(even == "MOVED_TO,ISDIR")
-//    {
-//        if(ch_name_rd == 1)
-//        {
-//            cout<<"重命名目录: "<<str_ch_name_rd<<" >> "<<name<<endl;
-//        }
-//    }
-//    else if(even == "MOVED_FROM,ISDIR")
-//    {
-//        cout<<"== 移除目录 =="<<endl;
-//    }
-
-    vec_pre = vec;
-
-    return true;
+    vec_pre = vec; //记录上次事件
+    return str_ret;
 }
